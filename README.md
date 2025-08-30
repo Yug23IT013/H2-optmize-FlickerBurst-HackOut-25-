@@ -76,9 +76,9 @@ README.md   # Project overview (this file)
 ---
 
 ## 🎯 Demo Workflow
-1. **Load App:** View Gujarat map with infrastructure layers
+1. **Load App:** View global map with infrastructure layers (demo data focused on Gujarat, India)
 2. **Toggle Layers:** Show/hide plants, pipelines, storage, demand centers
-3. **Analyze Sites:** Click "Analyze Site Suitability" and select any map location
+3. **Analyze Sites:** Click "Analyze Site Suitability" and select any map location globally
 4. **View Results:** See suitability score (0-100) with detailed breakdown
 5. **Dashboard:** Charts show infrastructure distribution and analysis
 
@@ -100,11 +100,12 @@ score = (renewablePotential/2000 * 40)
 ## 📊 Key Features
 
 ### Interactive Map
-- Gujarat-centered view with OpenStreetMap tiles
+- Global world view with OpenStreetMap tiles (demo data in Gujarat, India region)
 - Custom markers for different asset types
 - Real-time layer toggling
-- Click-to-analyze functionality
+- Click-to-analyze functionality anywhere on the map
 - Responsive popups with detailed information
+- Single world view prevents tile duplication
 
 ### Smart Analytics
 - Live suitability scoring

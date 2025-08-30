@@ -218,13 +218,13 @@ const MainDashboard = () => {
   }
 
   return (
-    <div className="h-screen bg-gradient-to-br from-hydrogen-50 to-energy-50 overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-hydrogen-50 to-energy-50">
       {/* Top Navigation Bar */}
       <motion.div
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white/95 backdrop-blur-sm border-b border-gray-200 px-6 py-4 flex items-center justify-between relative z-10 shadow-sm"
+        className="bg-white/95 backdrop-blur-sm border-b border-gray-200 px-6 py-4 flex items-center justify-between relative z-10 shadow-sm sticky top-0"
       >
         <div className="flex items-center space-x-4">
           <div className="w-8 h-8 bg-gradient-to-r from-hydrogen-500 to-energy-500 rounded-lg flex items-center justify-center">
@@ -272,30 +272,32 @@ const MainDashboard = () => {
       {/* Main Layout Grid */}
       <div className="h-[calc(100vh-80px)] grid grid-cols-12 gap-4 p-4">
         
-        {/* Left Sidebar - Controls */}
+        {/* Left Sidebar - Controls - Made wider */}
         <motion.div
           initial={{ opacity: 0, x: -100 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="col-span-3 lg:col-span-3 xl:col-span-2"
+          className="col-span-12 md:col-span-4 lg:col-span-3 xl:col-span-3"
         >
-          <Sidebar
-            visibleLayers={visibleLayers}
-            onLayerToggle={handleLayerToggle}
-            suitabilityMode={suitabilityMode}
-            onSuitabilityToggle={handleSuitabilityToggle}
-            assetCounts={assetCounts}
-          />
+          <div className="h-full">
+            <Sidebar
+              visibleLayers={visibleLayers}
+              onLayerToggle={handleLayerToggle}
+              suitabilityMode={suitabilityMode}
+              onSuitabilityToggle={handleSuitabilityToggle}
+              assetCounts={assetCounts}
+            />
+          </div>
         </motion.div>
 
-        {/* Center - Map View */}
+        {/* Center - Map View - Made larger and full height */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
-          className="col-span-6 lg:col-span-6 xl:col-span-7"
+          className="col-span-12 md:col-span-8 lg:col-span-5 xl:col-span-5"
         >
-          <div className="h-full glass-panel overflow-hidden">
+          <div className="h-full glass-panel">
             <MapView
               assets={assets}
               visibleLayers={visibleLayers}
@@ -306,14 +308,14 @@ const MainDashboard = () => {
           </div>
         </motion.div>
 
-        {/* Right Dashboard - Analytics */}
+        {/* Right Dashboard - Analytics - Made larger and full height */}
         <motion.div
           initial={{ opacity: 0, x: 100 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
-          className="col-span-3 lg:col-span-3 xl:col-span-3 h-full"
+          className="col-span-12 lg:col-span-4 xl:col-span-4"
         >
-          <div className="h-full glass-panel">
+          <div className="h-full glass-panel overflow-y-auto scrollbar-thin">
             <Dashboard
               assetCounts={assetCounts}
               suitabilityResult={suitabilityResult}

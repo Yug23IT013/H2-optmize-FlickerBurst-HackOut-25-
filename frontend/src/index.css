@@ -2,7 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Leaflet CSS imports */
+/* Import Leaflet CSS first - most important */
+@import url('https://unpkg.com/leaflet@1.7.1/dist/leaflet.css');
+
+/* Additional Leaflet CSS backup */
 @import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
 
 /* Fix for Leaflet icons in bundlers */
@@ -10,17 +13,48 @@
   background-image: url('https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png');
 }
 
-/* Ensure map container has proper height */
-.leaflet-container {
-  height: 100%;
-  width: 100%;
-  z-index: 1;
+/* Global styles for proper scrolling and layout */
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  
+  body {
+    @apply m-0 p-0 overflow-x-hidden;
+  }
+  
+  #root {
+    @apply min-h-screen;
+  }
 }
 
-/* Fix for map not showing */
-.leaflet-container .leaflet-control-attribution {
-  background: rgba(255, 255, 255, 0.7);
+/* Essential Leaflet styles - simplified and forced */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+  background: #a7e0ff !important; /* Light blue to show loading */
+}
+
+.leaflet-control-container .leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.8);
+  padding: 2px 5px;
+  font-size: 11px;
+}
+
+/* Ensure tiles are visible */
+.leaflet-tile-pane {
+  opacity: 1 !important;
+}
+
+.leaflet-tile {
+  opacity: 1 !important;
+}
+
+/* Basic map controls */
+.leaflet-control-zoom a {
+  background: #fff;
   color: #333;
+  border: 1px solid #ccc;
 }
 
 /* Custom component styles */

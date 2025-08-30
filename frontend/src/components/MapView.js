@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { MapContainer, TileLayer, GeoJSON, useMapEvents, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { motion } from 'framer-motion';
@@ -95,9 +95,27 @@ const MapView = ({
   const [popupPosition, setPopupPosition] = useState(null);
   const mapRef = useRef();
 
-  // Gujarat, India coordinates (center of the state)
-  const gujaratCenter = [23.0225, 72.5714];
-  const gujaratZoom = 7;
+  // World map center coordinates
+  const worldCenter = [20, 0]; // Center of world map
+  const worldZoom = 3; // Zoom level to show entire world
+  
+  // Define world bounds to prevent tile repetition
+  const worldBounds = [
+    [-90, -180], // Southwest coordinates (South Pole, International Date Line West)
+    [90, 180]    // Northeast coordinates (North Pole, International Date Line East)
+  ];
+
+  // Force map re-render after component mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (mapRef.current) {
+        mapRef.current.invalidateSize();
+        console.log('Map size invalidated for proper rendering');
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   /**
    * Handle map click for suitability scoring
@@ -203,7 +221,7 @@ const MapView = ({
   };
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative h-full w-full ${className}`}>
       {/* Loading overlay */}
       {loading && (
         <motion.div
@@ -234,17 +252,23 @@ const MapView = ({
         </motion.div>
       )}
 
-      {/* Map container */}
+      {/* Map container - simplified */}
       <MapContainer
-        center={gujaratCenter}
-        zoom={gujaratZoom}
-        className="h-full w-full rounded-xl"
+        center={worldCenter}
+        zoom={worldZoom}
+        style={{ height: '100%', width: '100%' }}
         ref={mapRef}
+        maxBounds={worldBounds}
+        minZoom={2}
+        maxZoom={18}
+        scrollWheelZoom={true}
+        dragging={true}
+        zoomControl={true}
       >
-        {/* Base tile layer */}
+        {/* Base tile layer - simplified for better loading */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
 
         {/* Map click handler */}
