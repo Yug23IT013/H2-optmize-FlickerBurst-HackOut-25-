@@ -44,16 +44,27 @@ function toRad(degrees) {
  */
 function generateRenewablePotential(lat, lng) {
   // Base potential with some randomness
-  const basePotential = 1750; // Average solar potential
-  const randomFactor = Math.random() * 500 - 250; // ±250 variation
+  let basePotential = 1750; // Average solar potential
+  
+  // Gujarat region bonus (excellent solar potential)
+  if (lat >= 20.0 && lat <= 24.5 && lng >= 68.0 && lng <= 74.5) {
+    basePotential = 1900; // Higher base for Gujarat
+  }
+  
+  // Rajasthan desert region bonus (highest solar potential in India)
+  if (lat >= 24.0 && lat <= 30.0 && lng >= 69.0 && lng <= 78.0) {
+    basePotential = 1950; // Highest for desert regions
+  }
+  
+  const randomFactor = Math.random() * 200 - 100; // ±100 variation (reduced from ±250)
   
   // Factor in latitude (closer to equator = higher potential)
-  const latitudeFactor = Math.cos(toRad(Math.abs(lat))) * 100;
+  const latitudeFactor = Math.cos(toRad(Math.abs(lat))) * 50; // Reduced impact
   
   const potential = basePotential + randomFactor + latitudeFactor;
   
-  // Ensure it's within realistic bounds (1500-2000 kWh/m²/year)
-  return Math.max(1500, Math.min(2000, Math.round(potential)));
+  // Ensure it's within realistic bounds (1600-2000 kWh/m²/year for India)
+  return Math.max(1600, Math.min(2000, Math.round(potential)));
 }
 
 /**
@@ -66,11 +77,16 @@ function generateRenewablePotential(lat, lng) {
 function generateGridDistance(lat, lng) {
   // Mock grid points (in a real system, these would be actual grid locations)
   const mockGridPoints = [
-    { lat: 40.7128, lng: -74.0060 }, // New York area
-    { lat: 34.0522, lng: -118.2437 }, // Los Angeles area
-    { lat: 41.8781, lng: -87.6298 }, // Chicago area
-    { lat: 29.7604, lng: -95.3698 }, // Houston area
-    { lat: 39.9526, lng: -75.1652 }, // Philadelphia area
+    { lat: 23.0225, lng: 72.5714 }, // Ahmedabad, Gujarat
+    { lat: 19.0760, lng: 72.8777 }, // Mumbai, Maharashtra
+    { lat: 28.7041, lng: 77.1025 }, // Delhi NCR
+    { lat: 13.0827, lng: 80.2707 }, // Chennai, Tamil Nadu
+    { lat: 17.3850, lng: 78.4867 }, // Hyderabad, Telangana
+    { lat: 22.5726, lng: 88.3639 }, // Kolkata, West Bengal
+    { lat: 18.5204, lng: 73.8567 }, // Pune, Maharashtra
+    { lat: 12.9716, lng: 77.5946 }, // Bangalore, Karnataka
+    { lat: 22.3072, lng: 72.1262 }, // Vadodara, Gujarat
+    { lat: 21.1702, lng: 72.8311 }, // Surat, Gujarat
   ];
   
   // Find nearest grid point
@@ -83,7 +99,7 @@ function generateGridDistance(lat, lng) {
   });
   
   // Add some randomness for more realistic mock data
-  const randomFactor = Math.random() * 20; // 0-20 km variation
+  const randomFactor = Math.random() * 10; // 0-10 km variation (reduced from 20)
   return Math.round((minDistance + randomFactor) * 100) / 100;
 }
 
@@ -99,10 +115,16 @@ function calculateSuitabilityScore(lat, lng, distanceToDemand) {
   const renewablePotential = generateRenewablePotential(lat, lng);
   const distanceToGrid = generateGridDistance(lat, lng);
   
-  // Calculate score components using the specified formula
+  // Calculate score components using improved formula
+  // Renewable potential: 35-40 points possible
   const renewableScore = (renewablePotential / 2000) * 40;
-  const demandScore = (1 / (distanceToDemand + 1)) * 30;
-  const gridScore = (1 / (distanceToGrid + 1)) * 30;
+  
+  // Demand accessibility: More forgiving distance penalty (0-30 points)
+  // Uses exponential decay: closer = higher score, but not as punishing for medium distances
+  const demandScore = Math.max(0, 30 * Math.exp(-distanceToDemand / 100));
+  
+  // Grid accessibility: More forgiving distance penalty (0-30 points)
+  const gridScore = Math.max(0, 30 * Math.exp(-distanceToGrid / 150));
   
   // Total score (0-100 scale)
   const totalScore = renewableScore + demandScore + gridScore;

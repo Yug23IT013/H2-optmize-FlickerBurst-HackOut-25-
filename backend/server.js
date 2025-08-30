@@ -14,6 +14,7 @@ const PORT = process.env.PORT || 5000;
 // Import routes
 const assetRoutes = require('./routes/assets');
 const suitabilityRoutes = require('./routes/suitability');
+const authRoutes = require('./routes/auth');
 
 // Middleware
 app.use(cors({
@@ -60,6 +61,7 @@ connectDB();
 // Routes
 app.use('/api/assets', assetRoutes);
 app.use('/api/suitability', suitabilityRoutes);
+app.use('/api/auth', authRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -79,6 +81,11 @@ app.get('/api', (req, res) => {
     version: '1.0.0',
     description: 'Backend API for Green Hydrogen Infrastructure Mapping and Optimization',
     endpoints: {
+      auth: {
+        login: 'POST /api/auth/login',
+        register: 'POST /api/auth/register',
+        me: 'GET /api/auth/me'
+      },
       assets: {
         plants: 'GET /api/assets/plants',
         pipelines: 'GET /api/assets/pipelines',

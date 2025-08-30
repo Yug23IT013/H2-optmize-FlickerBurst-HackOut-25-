@@ -19,9 +19,14 @@ const api = axios.create({
   },
 });
 
-// Request interceptor for logging (development only)
+// Add token to requests if available
 api.interceptors.request.use(
   (config) => {
+    const token = localStorage.getItem('h2_optimize_token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     if (process.env.NODE_ENV === 'development') {
       console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`);
     }
@@ -46,6 +51,80 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+/**
+ * Authentication API calls
+ */
+export const authAPI = {
+  /**
+   * Register a new user
+   * @param {string} email - User email
+   * @param {string} password - User password
+   * @param {string} name - User name (optional)
+   * @returns {Promise} User data and token
+   */
+  register: async (email, password, name) => {
+    try {
+      const response = await api.post('/api/auth/register', {
+        email,
+        password,
+        name,
+      });
+      return response.data;
+    } catch (error) {
+      const message = error.response?.data?.error || error.message;
+      throw new Error(`Registration failed: ${message}`);
+    }
+  },
+
+  /**
+   * Login user
+   * @param {string} email - User email
+   * @param {string} password - User password
+   * @returns {Promise} User data and token
+   */
+  login: async (email, password) => {
+    try {
+      const response = await api.post('/api/auth/login', {
+        email,
+        password,
+      });
+      return response.data;
+    } catch (error) {
+      const message = error.response?.data?.error || error.message;
+      throw new Error(`Login failed: ${message}`);
+    }
+  },
+
+  /**
+   * Get current user information
+   * @returns {Promise} Current user data
+   */
+  getCurrentUser: async () => {
+    try {
+      const response = await api.get('/api/auth/me');
+      return response.data;
+    } catch (error) {
+      const message = error.response?.data?.error || error.message;
+      throw new Error(`Failed to get user info: ${message}`);
+    }
+  },
+
+  /**
+   * Logout user (client-side only for JWT)
+   * @returns {Promise} Success response
+   */
+  logout: async () => {
+    try {
+      const response = await api.post('/api/auth/logout');
+      return response.data;
+    } catch (error) {
+      // Even if logout fails on server, we should clear local data
+      console.warn('Logout request failed, but clearing local data');
+      return { success: true, message: 'Logged out locally' };
+    }
+  },
+};
 
 /**
  * Asset API calls
