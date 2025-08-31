@@ -28,6 +28,7 @@ import {
 const Dashboard = ({ 
   assetCounts, 
   suitabilityResult,
+  areaAnalysisResult,
   className = "" 
 }) => {
 
@@ -180,6 +181,89 @@ const Dashboard = ({
             </p>
           </div>
         )}
+
+        {/* Area Analysis Section */}
+        {areaAnalysisResult && !areaAnalysisResult.error ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-6 border border-indigo-200"
+          >
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <svg className="w-5 h-5 text-indigo-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+              Area Analysis Results
+            </h3>
+            
+            {/* Best Site Summary */}
+            {areaAnalysisResult.bestSite && (
+              <div className="mb-4 p-4 bg-white/60 rounded-lg border border-indigo-100">
+                <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
+                  <StarIcon className="w-4 h-4 text-yellow-500 mr-1" />
+                  Best Site Found
+                </h4>
+                <div className="text-sm space-y-1">
+                  <p>
+                    <span className="font-medium">Score:</span> 
+                    <span className="ml-2 font-bold" style={{ color: areaAnalysisResult.bestSite.interpretation?.color }}>
+                      {areaAnalysisResult.bestSite.score.toFixed(1)} ({areaAnalysisResult.bestSite.interpretation?.level})
+                    </span>
+                  </p>
+                  <p>
+                    <span className="font-medium">Location:</span> 
+                    <span className="ml-2">
+                      {areaAnalysisResult.bestSite.location.lat.toFixed(4)}, {areaAnalysisResult.bestSite.location.lng.toFixed(4)}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Area Statistics */}
+            {areaAnalysisResult.areaStats && (
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <ScoreCard
+                  title="Sites Analyzed"
+                  value={areaAnalysisResult.areaStats.sitesAnalyzed}
+                  icon={MapPinIcon}
+                  color="text-indigo-600"
+                  bgColor="bg-indigo-50"
+                />
+                <ScoreCard
+                  title="Average Score"
+                  value={areaAnalysisResult.areaStats.avgScore?.toFixed(1)}
+                  icon={ChartBarIcon}
+                  color="text-purple-600"
+                  bgColor="bg-purple-50"
+                />
+                <ScoreCard
+                  title="Suitable Sites"
+                  value={areaAnalysisResult.areaStats.suitableSites}
+                  icon={BoltIcon}
+                  color="text-green-600"
+                  bgColor="bg-green-50"
+                />
+                <ScoreCard
+                  title="Area Size"
+                  value={areaAnalysisResult.areaStats.areaSize?.toFixed(1)}
+                  unit="km²"
+                  icon={SignalIcon}
+                  color="text-blue-600"
+                  bgColor="bg-blue-50"
+                />
+              </div>
+            )}
+          </motion.div>
+        ) : areaAnalysisResult?.error ? (
+          <div className="bg-red-50 rounded-lg p-6 border border-red-200 text-center">
+            <div className="w-12 h-12 text-red-400 mx-auto mb-3">⚠️</div>
+            <h3 className="text-lg font-medium text-red-700 mb-2">Analysis Error</h3>
+            <p className="text-sm text-red-600">
+              {areaAnalysisResult.message || 'Failed to analyze the selected area'}
+            </p>
+          </div>
+        ) : null}
 
         {/* Asset Distribution Chart */}
         <div className="bg-white rounded-lg p-4 border border-gray-200">

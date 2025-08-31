@@ -225,6 +225,28 @@ export const suitabilityAPI = {
       throw new Error(`Failed to calculate suitability: ${error.message}`);
     }
   },
+
+  /**
+   * Analyze area defined by 4 points to find best suitable sites
+   * @param {Object} bounds - { north, south, east, west }
+   * @param {Array} polygon - Array of [lat, lng] coordinates
+   * @param {number} gridResolution - Grid resolution for analysis (default: 8)
+   * @returns {Promise} Best sites and area analysis
+   */
+  analyzeArea: async (bounds, polygon, gridResolution = 8) => {
+    try {
+      const response = await api.post('/api/suitability/area', { 
+        bounds, 
+        polygon, 
+        gridResolution 
+      }, {
+        timeout: 30000 // 30 second timeout for area analysis
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to analyze area: ${error.message}`);
+    }
+  },
 };
 
 /**

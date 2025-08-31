@@ -1,5 +1,5 @@
 const DemandCenter = require('../models/DemandCenter');
-const { calculateDistance, calculateSuitabilityScore } = require('../utils/scoring');
+const { calculateDistance, calculateSuitabilityScore, generateWindSpeed, generateInfrastructureAccess } = require('../utils/scoring');
 
 /**
  * Suitability Controller - Calculate site suitability scores
@@ -120,6 +120,183 @@ function getScoreInterpretation(score) {
   }
 }
 
+/**
+ * Calculate best suitable sites within a defined area
+ * POST /api/suitability/area
+ * Body: { 
+ *   bounds: { north, south, east, west },
+ *   polygon: [[lat, lng], ...],
+ *   gridResolution?: number 
+ * }
+ */
+const analyzeArea = async (req, res) => {
+  try {
+    const { bounds, polygon, gridResolution = 20 } = req.body;
+    
+    // Validate input
+    if (!bounds || !polygon) {
+      return res.status(400).json({
+        error: 'Missing required parameters',
+        message: 'Both bounds and polygon are required'
+      });
+    }
+    
+    const { north, south, east, west } = bounds;
+    
+    // Validate bounds
+    if (north <= south || east <= west) {
+      return res.status(400).json({
+        error: 'Invalid bounds',
+        message: 'North must be greater than south, east must be greater than west'
+      });
+    }
+    
+    // Create a grid of points within the bounds
+    const sites = [];
+    const latStep = (north - south) / gridResolution;
+    const lngStep = (east - west) / gridResolution;
+    
+    console.log(`Analyzing area: ${gridResolution}x${gridResolution} grid`);
+    console.log(`Bounds: N:${north}, S:${south}, E:${east}, W:${west}`);
+    
+    // Reduce grid resolution to prevent timeout - use 8x8 grid (64 points max)
+    const actualGridResolution = Math.min(gridResolution, 8);
+    
+    // Get all demand centers once for the entire analysis (within reasonable distance)
+    const centerLat = (north + south) / 2;
+    const centerLng = (east + west) / 2;
+    
+    const demandCenters = await DemandCenter.find({
+      location: {
+        $geoWithin: {
+          $centerSphere: [
+            [centerLng, centerLat], 
+            100 / 6378.1 // 100km radius in radians
+          ]
+        }
+      }
+    }).limit(20); // Limit to 20 nearest centers to improve performance
+    
+    console.log(`Found ${demandCenters.length} demand centers in region`);
+    
+    // Pre-calculate demand center coordinates for faster access
+    const demandCenterCoords = demandCenters.map(center => ({
+      lat: center.location.coordinates[1],
+      lng: center.location.coordinates[0]
+    }));
+    
+    // Generate grid points within the square area (fixed loop bounds)
+    for (let i = 0; i < actualGridResolution; i++) {
+      for (let j = 0; j < actualGridResolution; j++) {
+        const lat = south + ((i + 0.5) * latStep);
+        const lng = west + ((j + 0.5) * lngStep);
+        
+        try {
+          // Find nearest demand center for this point (optimized search)
+          let minDistance = 100; // Default fallback
+          
+          if (demandCenterCoords.length > 0) {
+            for (const center of demandCenterCoords) {
+              const distance = calculateDistance(lat, lng, center.lat, center.lng);
+              if (distance < minDistance) {
+                minDistance = distance;
+                // Early break for very close centers to save computation
+                if (distance < 5) break;
+              }
+            }
+          }
+          
+          // Calculate suitability score for this point
+          const siteResult = calculateSuitabilityScore(lat, lng, minDistance);
+          siteResult.location = { lat, lng };
+          siteResult.interpretation = getScoreInterpretation(siteResult.score);
+          
+          sites.push(siteResult);
+        } catch (error) {
+          // Skip this point if there's an error (e.g., invalid coordinates)
+          console.warn(`Skipping point [${lat}, ${lng}]: ${error.message}`);
+        }
+      }
+    }
+    
+    // Sort sites by score (descending)
+    sites.sort((a, b) => b.score - a.score);
+    
+    // Calculate area statistics
+    const areaStats = calculateAreaStats(sites, bounds, polygon);
+    
+    // Get best site
+    const bestSite = sites.length > 0 ? sites[0] : null;
+    
+    const result = {
+      bestSite,
+      sites: sites.slice(0, 10), // Return top 10 sites
+      areaStats,
+      timestamp: new Date().toISOString(),
+      gridResolution: actualGridResolution,
+      totalSitesAnalyzed: sites.length,
+      analysisType: 'square'
+    };
+    
+    console.log(`Analysis complete: Found ${sites.length} sites, best score: ${bestSite?.score || 0}`);
+    
+    res.json(result);
+    
+  } catch (error) {
+    console.error('Error analyzing area:', error);
+    res.status(500).json({
+      error: 'Failed to analyze area',
+      message: error.message
+    });
+  }
+};
+
+/**
+ * Calculate statistics for the analyzed square area
+ * @param {Array} sites - Array of analyzed sites
+ * @param {Object} bounds - Area bounds
+ * @param {Array} polygon - Polygon coordinates (not used for square)
+ * @returns {Object} Area statistics
+ */
+function calculateAreaStats(sites, bounds, polygon) {
+  const scores = sites.map(site => site.score);
+  const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+  const maxScore = scores.length > 0 ? Math.max(...scores) : 0;
+  const minScore = scores.length > 0 ? Math.min(...scores) : 0;
+  
+  // Calculate actual square area using Haversine formula for more accuracy
+  const latDiff = bounds.north - bounds.south;
+  const lngDiff = bounds.east - bounds.west;
+  
+  // Convert degrees to kilometers (approximate)
+  const latKm = latDiff * 111; // 1 degree latitude ≈ 111 km
+  const lngKm = lngDiff * 111 * Math.cos(((bounds.north + bounds.south) / 2) * Math.PI / 180); // Adjust for longitude at this latitude
+  
+  const areaKm2 = Math.abs(latKm * lngKm);
+  
+  // Count suitable sites (score >= 60)
+  const suitableSites = sites.filter(site => site.score >= 60).length;
+  
+  return {
+    sitesAnalyzed: sites.length,
+    avgScore: Math.round(avgScore * 100) / 100,
+    maxScore: Math.round(maxScore * 100) / 100,
+    minScore: Math.round(minScore * 100) / 100,
+    areaSize: Math.round(areaKm2 * 100) / 100,
+    suitableSites,
+    excellentSites: sites.filter(site => site.score >= 80).length,
+    goodSites: sites.filter(site => site.score >= 60 && site.score < 80).length,
+    fairSites: sites.filter(site => site.score >= 40 && site.score < 60).length,
+    poorSites: sites.filter(site => site.score < 40).length,
+    // Additional square-specific stats
+    squareDimensions: {
+      latitudeSpan: Math.round(latKm * 100) / 100,
+      longitudeSpan: Math.round(lngKm * 100) / 100
+    }
+  };
+}
+
 module.exports = {
-  calculateSuitability
+  calculateSuitability,
+  analyzeArea
 };

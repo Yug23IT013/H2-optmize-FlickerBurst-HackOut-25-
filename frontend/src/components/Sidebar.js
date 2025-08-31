@@ -18,6 +18,8 @@ const Sidebar = ({
   onLayerToggle, 
   suitabilityMode, 
   onSuitabilityToggle,
+  areaMode = false,
+  onAreaModeToggle,
   assetCounts 
 }) => {
   
@@ -79,8 +81,9 @@ const Sidebar = ({
         </p>
       </div>
 
-      {/* Suitability Mode Toggle */}
-      <div className="py-4 border-b border-gray-200">
+      {/* Analysis Mode Toggles */}
+      <div className="py-4 border-b border-gray-200 space-y-3">
+        {/* Suitability Mode Toggle */}
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -94,20 +97,57 @@ const Sidebar = ({
           {suitabilityMode ? (
             <span className="flex items-center justify-center">
               <div className="w-2 h-2 bg-white rounded-full animate-pulse mr-2"></div>
-              Analysis Mode Active
+              Site Analysis Active
             </span>
           ) : (
             'Analyze Site Suitability'
           )}
         </motion.button>
+
+        {/* Area Mode Toggle */}
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={onAreaModeToggle}
+          className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
+            areaMode
+              ? 'bg-gradient-to-r from-indigo-600 to-purple-500 text-white shadow-lg'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+          }`}
+        >
+          {areaMode ? (
+            <span className="flex items-center justify-center">
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse mr-2"></div>
+              Area Analysis Active
+            </span>
+          ) : (
+            <span className="flex items-center justify-center">
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+              Analyze Area (4 Points)
+            </span>
+          )}
+        </motion.button>
         
+        {/* Mode descriptions */}
         {suitabilityMode && (
           <motion.p
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
-            className="text-xs text-gray-500 mt-2 px-1"
+            className="text-xs text-gray-500 px-1"
           >
-            Click anywhere on the map to analyze site suitability for hydrogen infrastructure
+            Click anywhere on the map to analyze site suitability
+          </motion.p>
+        )}
+        
+        {areaMode && (
+          <motion.p
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="text-xs text-gray-500 px-1"
+          >
+            Place 4 dots on the map to define an area for analysis
           </motion.p>
         )}
       </div>

@@ -38,7 +38,9 @@ const MainDashboard = () => {
   });
   
   const [suitabilityMode, setSuitabilityMode] = useState(false);
+  const [areaMode, setAreaMode] = useState(false);
   const [suitabilityResult, setSuitabilityResult] = useState(null);
+  const [areaAnalysisResult, setAreaAnalysisResult] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -120,6 +122,26 @@ const MainDashboard = () => {
     if (suitabilityMode) {
       setSuitabilityResult(null); // Clear result when disabling mode
     }
+    // Disable area mode when switching to suitability mode
+    if (!suitabilityMode) {
+      setAreaMode(false);
+      setAreaAnalysisResult(null);
+    }
+  };
+
+  /**
+   * Handle area mode toggle
+   */
+  const handleAreaModeToggle = () => {
+    setAreaMode(prev => !prev);
+    if (areaMode) {
+      setAreaAnalysisResult(null); // Clear result when disabling mode
+    }
+    // Disable suitability mode when switching to area mode
+    if (!areaMode) {
+      setSuitabilityMode(false);
+      setSuitabilityResult(null);
+    }
   };
 
   /**
@@ -128,6 +150,14 @@ const MainDashboard = () => {
   const handleSuitabilityResult = (result) => {
     setSuitabilityResult(result);
     console.log('📊 Suitability analysis result:', result);
+  };
+
+  /**
+   * Handle area analysis result
+   */
+  const handleAreaAnalysisResult = (result) => {
+    setAreaAnalysisResult(result);
+    console.log('📊 Area analysis result:', result);
   };
 
   /**
@@ -285,6 +315,8 @@ const MainDashboard = () => {
               onLayerToggle={handleLayerToggle}
               suitabilityMode={suitabilityMode}
               onSuitabilityToggle={handleSuitabilityToggle}
+              areaMode={areaMode}
+              onAreaModeToggle={handleAreaModeToggle}
               assetCounts={assetCounts}
             />
           </div>
@@ -302,7 +334,9 @@ const MainDashboard = () => {
               assets={assets}
               visibleLayers={visibleLayers}
               suitabilityMode={suitabilityMode}
+              areaMode={areaMode}
               onSuitabilityResult={handleSuitabilityResult}
+              onAreaAnalysisResult={handleAreaAnalysisResult}
               className="h-full"
             />
           </div>
@@ -319,6 +353,7 @@ const MainDashboard = () => {
             <Dashboard
               assetCounts={assetCounts}
               suitabilityResult={suitabilityResult}
+              areaAnalysisResult={areaAnalysisResult}
             />
           </div>
         </motion.div>

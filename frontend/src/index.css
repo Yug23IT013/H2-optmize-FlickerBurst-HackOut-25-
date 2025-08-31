@@ -127,3 +127,37 @@
 .loading-spinner {
   @apply animate-spin rounded-full border-2 border-gray-300 border-t-hydrogen-600;
 }
+
+/* Area selector styles */
+.area-dot-icon {
+  z-index: 1000;
+}
+
+.best-site-icon {
+  z-index: 1001;
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    transform: scale(1); 
+    opacity: 1;
+  }
+  50% { 
+    transform: scale(1.1); 
+    opacity: 0.8;
+  }
+}
+
+.animate-pulse-custom {
+  animation: pulse 2s infinite;
+}
+
+/* Polygon styling */
+.leaflet-interactive {
+  cursor: pointer;
+}
+
+.area-analysis-popup {
+  max-width: none !important;
+  width: 350px;
+}

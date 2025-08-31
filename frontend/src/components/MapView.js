@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MapContainer, TileLayer, GeoJSON, useMapEvents, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, useMapEvents, Popup, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import { motion } from 'framer-motion';
 import { suitabilityAPI } from '../services/api';
 import PopupInfo from './PopupInfo';
+import AreaSelector from './AreaSelector';
+import AreaAnalysisResult from './AreaAnalysisResult';
 
 /**
  * MapView Component - Interactive Leaflet map with asset layers
@@ -50,6 +52,39 @@ const createCustomIcon = (color, iconType) => {
   });
 };
 
+// Best site marker icon
+const createBestSiteIcon = () => {
+  return L.divIcon({
+    className: 'best-site-icon',
+    html: `
+      <div style="
+        background: linear-gradient(45deg, #22c55e, #16a34a);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid white;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        font-size: 16px;
+        color: white;
+        animation: pulse 2s infinite;
+      ">
+        ⭐
+      </div>
+      <style>
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.1); }
+        }
+      </style>
+    `,
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+  });
+};
+
 // Asset styling configuration
 const assetStyles = {
   plants: {
@@ -86,13 +121,17 @@ function MapClickHandler({ onMapClick, suitabilityMode }) {
 const MapView = ({ 
   assets, 
   visibleLayers, 
-  suitabilityMode, 
+  suitabilityMode,
+  areaMode = false,
   onSuitabilityResult,
+  onAreaAnalysisResult,
   className = "" 
 }) => {
   const [loading, setLoading] = useState(false);
   const [popupData, setPopupData] = useState(null);
   const [popupPosition, setPopupPosition] = useState(null);
+  const [areaAnalysisResult, setAreaAnalysisResult] = useState(null);
+  const [bestSiteMarker, setBestSiteMarker] = useState(null);
   const mapRef = useRef();
 
   // World map center coordinates
@@ -118,10 +157,64 @@ const MapView = ({
   }, []);
 
   /**
+   * Handle area analysis completion
+   */
+  const handleAreaAnalysis = async (bounds) => {
+    setLoading(true);
+    try {
+      const result = await suitabilityAPI.analyzeArea(bounds, bounds.polygon, 20);
+      setAreaAnalysisResult(result);
+      
+      // Show best site marker if available
+      if (result.bestSite) {
+        setBestSiteMarker({
+          lat: result.bestSite.location.lat,
+          lng: result.bestSite.location.lng,
+          data: result.bestSite
+        });
+      }
+      
+      if (onAreaAnalysisResult) {
+        onAreaAnalysisResult(result);
+      }
+    } catch (error) {
+      console.error('Error analyzing area:', error);
+      setAreaAnalysisResult({
+        error: true,
+        message: 'Failed to analyze area'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Handle site selection from area analysis
+   */
+  const handleSiteSelect = (site) => {
+    // Center map on selected site
+    if (mapRef.current) {
+      mapRef.current.setView([site.location.lat, site.location.lng], 12);
+    }
+    
+    // Show popup for selected site
+    setPopupData(site);
+    setPopupPosition([site.location.lat, site.location.lng]);
+  };
+
+  /**
+   * Reset area analysis
+   */
+  const handleAreaReset = () => {
+    setAreaAnalysisResult(null);
+    setBestSiteMarker(null);
+  };
+
+  /**
    * Handle map click for suitability scoring
    */
   const handleMapClick = async (latlng) => {
-    if (!suitabilityMode) return;
+    if (!suitabilityMode || areaMode) return;
 
     setLoading(true);
     try {
@@ -274,8 +367,31 @@ const MapView = ({
         {/* Map click handler */}
         <MapClickHandler
           onMapClick={handleMapClick}
-          suitabilityMode={suitabilityMode}
+          suitabilityMode={suitabilityMode && !areaMode}
         />
+
+        {/* Area Selector */}
+        {areaMode && (
+          <AreaSelector
+            isAreaMode={areaMode}
+            onAreaComplete={handleAreaAnalysis}
+            onReset={handleAreaReset}
+          />
+        )}
+
+        {/* Best site marker from area analysis */}
+        {bestSiteMarker && (
+          <Marker
+            position={[bestSiteMarker.lat, bestSiteMarker.lng]}
+            icon={createBestSiteIcon()}
+            eventHandlers={{
+              click: () => {
+                setPopupData(bestSiteMarker.data);
+                setPopupPosition([bestSiteMarker.lat, bestSiteMarker.lng]);
+              }
+            }}
+          />
+        )}
 
         {/* Asset layers */}
         {assets.plants && visibleLayers.plants && (
@@ -327,6 +443,17 @@ const MapView = ({
           </Popup>
         )}
       </MapContainer>
+
+      {/* Area Analysis Results Panel */}
+      {areaAnalysisResult && (
+        <div className="absolute top-4 right-4 z-[1000] max-w-md">
+          <AreaAnalysisResult
+            analysisResult={areaAnalysisResult}
+            onSiteSelect={handleSiteSelect}
+            onClose={() => setAreaAnalysisResult(null)}
+          />
+        </div>
+      )}
     </div>
   );
 };
