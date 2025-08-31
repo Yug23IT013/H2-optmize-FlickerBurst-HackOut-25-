@@ -5,7 +5,8 @@ import {
   CogIcon, 
   BuildingOfficeIcon,
   TruckIcon,
-  BoltIcon 
+  BoltIcon,
+  ShieldCheckIcon
 } from '@heroicons/react/24/outline';
 
 /**
@@ -60,6 +61,15 @@ const Sidebar = ({
       bgColor: 'bg-purple-50',
       borderColor: 'border-purple-200',
       description: 'Hydrogen transport infrastructure'
+    },
+    {
+      key: 'regulatoryZones',
+      label: 'Regulatory Zones',
+      icon: ShieldCheckIcon,
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
+      borderColor: 'border-indigo-200',
+      description: 'Policy and regulatory boundaries'
     }
   ];
 

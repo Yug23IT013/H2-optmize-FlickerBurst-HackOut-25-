@@ -15,6 +15,7 @@ const PORT = process.env.PORT || 5000;
 const assetRoutes = require('./routes/assets');
 const suitabilityRoutes = require('./routes/suitability');
 const authRoutes = require('./routes/auth');
+const regulatoryRoutes = require('./routes/regulatory');
 
 // Middleware
 app.use(cors({
@@ -62,6 +63,7 @@ connectDB();
 app.use('/api/assets', assetRoutes);
 app.use('/api/suitability', suitabilityRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/regulatory', regulatoryRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -90,7 +92,13 @@ app.get('/api', (req, res) => {
         plants: 'GET /api/assets/plants',
         pipelines: 'GET /api/assets/pipelines',
         demandCenters: 'GET /api/assets/demand-centers',
-        storage: 'GET /api/assets/storage'
+        storage: 'GET /api/assets/storage',
+        regulatoryZones: 'GET /api/assets/regulatory-zones'
+      },
+      regulatory: {
+        zones: 'GET /api/regulatory/zones',
+        containingPoint: 'POST /api/regulatory/zones/containing-point',
+        stats: 'GET /api/regulatory/stats'
       },
       suitability: 'POST /api/suitability',
       health: 'GET /health'

@@ -6,7 +6,8 @@ import {
   MapPinIcon,
   BoltIcon,
   SignalIcon,
-  TruckIcon
+  TruckIcon,
+  ShieldCheckIcon
 } from '@heroicons/react/24/outline';
 
 /**
@@ -140,11 +141,80 @@ const PopupInfo = ({ data }) => {
                 </div>
                 {details.breakdown?.gridScore && (
                   <div className="text-xs text-gray-500">
-                    Score: {details.breakdown.gridScore}/30
+                    Score: {details.breakdown.gridScore}/25
                   </div>
                 )}
               </div>
             </div>
+
+            {/* Regulatory Environment */}
+            {details.regulatoryScore !== undefined && (
+              <div className="flex items-center justify-between py-2">
+                <div className="flex items-center">
+                  <ShieldCheckIcon className="w-4 h-4 text-indigo-500 mr-2" />
+                  <span className="text-sm text-gray-600">Regulatory Environment</span>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-medium text-gray-800">
+                    {details.regulatoryScore}/100
+                  </div>
+                  {details.breakdown?.regulatoryScore && (
+                    <div className="text-xs text-gray-500">
+                      Score: {details.breakdown.regulatoryScore}/20
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Regulatory Analysis */}
+      {data.regulatoryAnalysis && (
+        <div className="border-t border-gray-200 pt-3 mb-4">
+          <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+            <ShieldCheckIcon className="w-4 h-4 text-indigo-500 mr-1" />
+            Regulatory Environment
+          </h4>
+          
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Status:</span>
+              <span 
+                className="text-sm font-medium"
+                style={{ color: data.regulatoryAnalysis.color }}
+              >
+                {data.regulatoryAnalysis.level}
+              </span>
+            </div>
+            
+            {data.regulatoryAnalysis.affectedZones > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Zones:</span>
+                <span className="text-sm font-medium text-gray-800">
+                  {data.regulatoryAnalysis.affectedZones}
+                </span>
+              </div>
+            )}
+            
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Approval Timeline:</span>
+              <span className="text-sm font-medium text-gray-800">
+                {data.regulatoryAnalysis.approvalTimeline}
+              </span>
+            </div>
+
+            {data.regulatoryAnalysis.incentives?.length > 0 && (
+              <div className="mt-2">
+                <div className="text-xs font-medium text-green-600 mb-1">Key Incentives:</div>
+                <div className="text-xs text-gray-600">
+                  {data.regulatoryAnalysis.incentives.slice(0, 2).map((incentive, index) => (
+                    <div key={index}>• {incentive}</div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

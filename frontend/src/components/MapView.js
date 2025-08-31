@@ -103,6 +103,17 @@ const assetStyles = {
     color: '#8b5cf6',
     weight: 4,
     opacity: 0.8
+  },
+  regulatoryZones: {
+    // Different colors for different zone types
+    'hydrogen-priority-zone': { fillColor: '#22c55e', color: '#16a34a', fillOpacity: 0.2 },
+    'renewable-energy-zone': { fillColor: '#3b82f6', color: '#1d4ed8', fillOpacity: 0.2 },
+    'industrial-zone': { fillColor: '#f59e0b', color: '#d97706', fillOpacity: 0.2 },
+    'port-authority': { fillColor: '#8b5cf6', color: '#7c3aed', fillOpacity: 0.2 },
+    'special-economic-zone': { fillColor: '#06b6d4', color: '#0891b2', fillOpacity: 0.2 },
+    'environmental-sensitive': { fillColor: '#ef4444', color: '#dc2626', fillOpacity: 0.3 },
+    'restricted-zone': { fillColor: '#ef4444', color: '#dc2626', fillOpacity: 0.4 },
+    'government-incentive-zone': { fillColor: '#84cc16', color: '#65a30d', fillOpacity: 0.2 }
   }
 };
 
@@ -257,6 +268,23 @@ const MapView = ({
   });
 
   /**
+   * Style function for regulatory zones (polygons)
+   */
+  const regulatoryZoneStyle = (feature) => {
+    const zoneType = feature.properties.type;
+    const style = assetStyles.regulatoryZones[zoneType] || assetStyles.regulatoryZones['industrial-zone'];
+    
+    return {
+      fillColor: style.fillColor,
+      color: style.color,
+      fillOpacity: style.fillOpacity,
+      weight: 2,
+      opacity: 0.8,
+      dashArray: '5, 5' // Dashed border to distinguish from solid fills
+    };
+  };
+
+  /**
    * Popup content for assets
    */
   const onEachFeature = (feature, layer, assetType) => {
@@ -293,6 +321,36 @@ const MapView = ({
         popupContent += `
           <p><span class="font-medium">Capacity:</span> ${props.capacity} MW</p>
           <p><span class="font-medium">Status:</span> ${props.status}</p>
+        `;
+        break;
+      case 'regulatoryZones':
+        const scoreColor = props.regulatoryScore >= 80 ? '#22c55e' : 
+                          props.regulatoryScore >= 60 ? '#84cc16' :
+                          props.regulatoryScore >= 40 ? '#eab308' :
+                          props.regulatoryScore >= 20 ? '#f97316' : '#ef4444';
+        
+        popupContent += `
+          <p><span class="font-medium">Type:</span> ${props.type.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
+          <p><span class="font-medium">Jurisdiction:</span> ${props.jurisdiction}</p>
+          <div class="mt-2">
+            <p class="font-medium">Regulatory Score:</p>
+            <div class="flex items-center mt-1">
+              <div class="w-12 h-3 bg-gray-200 rounded-full mr-2">
+                <div 
+                  class="h-full rounded-full" 
+                  style="width: ${props.regulatoryScore}%; background-color: ${scoreColor}"
+                ></div>
+              </div>
+              <span class="text-sm font-medium" style="color: ${scoreColor}">${props.regulatoryScore}</span>
+            </div>
+          </div>
+          <div class="mt-2">
+            <p class="font-medium text-green-600">Incentives:</p>
+            ${props.policies.hydrogenIncentives ? '<p class="text-sm">• Hydrogen development incentives</p>' : ''}
+            ${props.policies.subsidyPercentage > 0 ? `<p class="text-sm">• ${props.policies.subsidyPercentage}% subsidy available</p>` : ''}
+            ${props.policies.fastTrackApproval ? '<p class="text-sm">• Fast-track approval process</p>' : ''}
+          </div>
+          <p class="text-sm mt-2"><span class="font-medium">Approval Timeline:</span> ${props.approvalTimeline} days</p>
         `;
         break;
       default:
@@ -427,6 +485,15 @@ const MapView = ({
             data={assets.pipelines}
             style={pipelineStyle}
             onEachFeature={(feature, layer) => onEachFeature(feature, layer, 'pipelines')}
+          />
+        )}
+
+        {assets.regulatoryZones && visibleLayers.regulatoryZones && (
+          <GeoJSON
+            key="regulatoryZones"
+            data={assets.regulatoryZones}
+            style={regulatoryZoneStyle}
+            onEachFeature={(feature, layer) => onEachFeature(feature, layer, 'regulatoryZones')}
           />
         )}
 

@@ -123,9 +123,10 @@ function generateGridDistance(lat, lng) {
  * @param {number} lat - Latitude
  * @param {number} lng - Longitude
  * @param {number} distanceToDemand - Distance to nearest demand center in km
+ * @param {number} regulatoryScore - Regulatory score (0-100) from regulatory analysis
  * @returns {Object} Score object with overall score and breakdown
  */
-function calculateSuitabilityScore(lat, lng, distanceToDemand) {
+function calculateSuitabilityScore(lat, lng, distanceToDemand, regulatoryScore = 30) {
   // Generate renewable potential and grid distance
   const renewablePotential = generateRenewablePotential(lat, lng);
   const distanceToGrid = generateGridDistance(lat, lng);
@@ -134,19 +135,21 @@ function calculateSuitabilityScore(lat, lng, distanceToDemand) {
   const windSpeed = generateWindSpeed(lat, lng);
   const infrastructureAccess = generateInfrastructureAccess(lat, lng);
   
-  // Calculate score components using improved formula
-  // Renewable potential: 35-40 points possible
-  const renewableScore = (renewablePotential / 2000) * 40;
+  // Calculate score components using updated formula with regulatory factors
+  // Renewable potential: 30 points possible (reduced from 40 to make room for regulatory)
+  const renewableScore = (renewablePotential / 2000) * 30;
   
-  // Demand accessibility: More forgiving distance penalty (0-30 points)
-  // Uses exponential decay: closer = higher score, but not as punishing for medium distances
-  const demandScore = Math.max(0, 30 * Math.exp(-distanceToDemand / 100));
+  // Demand accessibility: 25 points possible (reduced from 30)
+  const demandScore = Math.max(0, 25 * Math.exp(-distanceToDemand / 100));
   
-  // Grid accessibility: More forgiving distance penalty (0-30 points)
-  const gridScore = Math.max(0, 30 * Math.exp(-distanceToGrid / 150));
+  // Grid accessibility: 25 points possible (reduced from 30)
+  const gridScore = Math.max(0, 25 * Math.exp(-distanceToGrid / 150));
+  
+  // Regulatory environment: 20 points possible (new factor)
+  const regulatoryComponent = (regulatoryScore / 100) * 20;
   
   // Total score (0-100 scale)
-  const totalScore = renewableScore + demandScore + gridScore;
+  const totalScore = renewableScore + demandScore + gridScore + regulatoryComponent;
   
   return {
     score: Math.round(totalScore * 100) / 100, // Round to 2 decimal places
@@ -154,17 +157,20 @@ function calculateSuitabilityScore(lat, lng, distanceToDemand) {
       renewablePotential,
       distanceToDemand: Math.round(distanceToDemand * 100) / 100,
       distanceToGrid,
+      regulatoryScore: Math.round(regulatoryScore * 100) / 100,
       breakdown: {
         renewableScore: Math.round(renewableScore * 100) / 100,
         demandScore: Math.round(demandScore * 100) / 100,
-        gridScore: Math.round(gridScore * 100) / 100
+        gridScore: Math.round(gridScore * 100) / 100,
+        regulatoryScore: Math.round(regulatoryComponent * 100) / 100
       }
     },
     factors: {
       windSpeed: Math.round(windSpeed * 100) / 100,
       solarIrradiance: Math.round(renewablePotential * 100) / 100,
       distanceToDemand: Math.round(distanceToDemand * 100) / 100,
-      infrastructureAccess: Math.round(infrastructureAccess * 100) / 100
+      infrastructureAccess: Math.round(infrastructureAccess * 100) / 100,
+      regulatoryEnvironment: Math.round(regulatoryScore * 100) / 100
     }
   };
 }

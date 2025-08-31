@@ -1,4 +1,5 @@
 const DemandCenter = require('../models/DemandCenter');
+const RegulatoryZone = require('../models/RegulatoryZone');
 const { calculateDistance, calculateSuitabilityScore, generateWindSpeed, generateInfrastructureAccess } = require('../utils/scoring');
 
 /**
@@ -59,12 +60,29 @@ const calculateSuitability = async (req, res) => {
       };
     }
     
-    // Calculate suitability score
-    const result = calculateSuitabilityScore(lat, lng, distanceToDemand);
+    // Find regulatory zones containing this point
+    const regulatoryZones = await RegulatoryZone.find({
+      boundary: {
+        $geoIntersects: {
+          $geometry: {
+            type: 'Point',
+            coordinates: [lng, lat]
+          }
+        }
+      },
+      status: 'active'
+    });
+    
+    // Analyze regulatory environment
+    const regulatoryAnalysis = analyzeRegulatoryEnvironment(regulatoryZones, lat, lng);
+    
+    // Calculate suitability score (now includes regulatory factor)
+    const result = calculateSuitabilityScore(lat, lng, distanceToDemand, regulatoryAnalysis.overallScore);
     
     // Add additional context information
     result.location = { lat, lng };
     result.nearestDemandCenter = nearestDemandInfo;
+    result.regulatoryAnalysis = regulatoryAnalysis;
     result.timestamp = new Date().toISOString();
     
     // Add score interpretation for frontend
@@ -293,6 +311,153 @@ function calculateAreaStats(sites, bounds, polygon) {
       latitudeSpan: Math.round(latKm * 100) / 100,
       longitudeSpan: Math.round(lngKm * 100) / 100
     }
+  };
+}
+
+/**
+ * Analyze regulatory environment for a location
+ * @param {Array} zones - Array of regulatory zones
+ * @param {Number} lat - Latitude
+ * @param {Number} lng - Longitude
+ * @returns {Object} Regulatory analysis
+ */
+function analyzeRegulatoryEnvironment(zones, lat, lng) {
+  if (zones.length === 0) {
+    return {
+      overallScore: 30, // Neutral/unknown regulatory environment
+      level: 'Unknown',
+      color: '#9ca3af',
+      description: 'No specific regulatory zones identified. Standard approval processes apply.',
+      recommendations: [
+        'Consult local authorities for specific requirements',
+        'Consider proximity to industrial zones for better support',
+        'Check for any upcoming policy changes'
+      ],
+      incentives: [],
+      restrictions: [],
+      approvalTimeline: '6-12 months (estimated)',
+      keyContacts: [],
+      affectedZones: 0
+    };
+  }
+  
+  // Calculate weighted average score
+  const scores = zones.map(zone => zone.calculateRegulatoryScore());
+  const overallScore = Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+  
+  // Collect incentives and restrictions
+  const incentives = [];
+  const restrictions = [];
+  let shortestApproval = Infinity;
+  const contacts = [];
+  
+  zones.forEach(zone => {
+    // Collect incentives
+    if (zone.policies.hydrogenIncentives) {
+      incentives.push(`${zone.name}: Hydrogen development incentives available`);
+    }
+    if (zone.policies.subsidyPercentage > 0) {
+      incentives.push(`${zone.name}: ${zone.policies.subsidyPercentage}% subsidy available`);
+    }
+    if (zone.policies.fastTrackApproval) {
+      incentives.push(`${zone.name}: Fast-track approval process`);
+    }
+    if (zone.policies.landAcquisitionSupport) {
+      incentives.push(`${zone.name}: Land acquisition support provided`);
+    }
+    if (zone.policies.infrastructureSupport) {
+      incentives.push(`${zone.name}: Infrastructure development support`);
+    }
+    
+    // Collect restrictions
+    if (zone.restrictions.maxCapacity) {
+      restrictions.push(`${zone.name}: Maximum capacity ${zone.restrictions.maxCapacity} MW`);
+    }
+    zone.restrictions.environmentalLimitations.forEach(limitation => {
+      restrictions.push(`${zone.name}: ${limitation.replace('-', ' ')}`);
+    });
+    zone.restrictions.seasonalRestrictions.forEach(restriction => {
+      restrictions.push(`${zone.name}: Seasonal restrictions during ${restriction.months.join(', ')}`);
+    });
+    
+    // Track shortest approval timeline
+    if (zone.approvalTimeline < shortestApproval) {
+      shortestApproval = zone.approvalTimeline;
+    }
+    
+    // Collect contact information
+    if (zone.contactInfo.authority) {
+      contacts.push({
+        zone: zone.name,
+        authority: zone.contactInfo.authority,
+        email: zone.contactInfo.email,
+        phone: zone.contactInfo.phone,
+        website: zone.contactInfo.website
+      });
+    }
+  });
+  
+  // Determine level and recommendations
+  let level, color, description, recommendations;
+  
+  if (overallScore >= 80) {
+    level = 'Highly Favorable';
+    color = '#22c55e';
+    description = 'Excellent regulatory environment with strong government support and incentives.';
+    recommendations = [
+      'Proceed with detailed feasibility study',
+      'Engage with local authorities early for fast-track processing',
+      'Leverage available incentives and subsidies'
+    ];
+  } else if (overallScore >= 60) {
+    level = 'Favorable';
+    color = '#84cc16';
+    description = 'Good regulatory environment with some incentives and reasonable approval processes.';
+    recommendations = [
+      'Review specific zone requirements in detail',
+      'Consider timing to optimize incentive utilization',
+      'Prepare comprehensive environmental assessments'
+    ];
+  } else if (overallScore >= 40) {
+    level = 'Moderate';
+    color = '#eab308';
+    description = 'Mixed regulatory environment. Some benefits but also restrictions to consider.';
+    recommendations = [
+      'Conduct thorough regulatory due diligence',
+      'Consider phased development approach',
+      'Engage regulatory consultants familiar with local requirements'
+    ];
+  } else if (overallScore >= 20) {
+    level = 'Challenging';
+    color = '#f97316';
+    description = 'Complex regulatory environment with significant restrictions or lengthy processes.';
+    recommendations = [
+      'Assess if benefits justify regulatory complexity',
+      'Consider alternative locations with better regulatory support',
+      'Plan for extended development timeline'
+    ];
+  } else {
+    level = 'Unfavorable';
+    color = '#ef4444';
+    description = 'Difficult regulatory environment with major restrictions or lack of support.';
+    recommendations = [
+      'Strongly consider alternative locations',
+      'If proceeding, engage specialized regulatory experts',
+      'Plan for significant time and resource investment'
+    ];
+  }
+  
+  return {
+    overallScore,
+    level,
+    color,
+    description,
+    recommendations: recommendations.slice(0, 3), // Limit to top 3
+    incentives: incentives.slice(0, 5), // Limit to top 5
+    restrictions: restrictions.slice(0, 5), // Limit to top 5
+    approvalTimeline: shortestApproval === Infinity ? '6-12 months (estimated)' : `${Math.ceil(shortestApproval / 30)} months`,
+    keyContacts: contacts.slice(0, 3), // Limit to top 3
+    affectedZones: zones.length
   };
 }
 

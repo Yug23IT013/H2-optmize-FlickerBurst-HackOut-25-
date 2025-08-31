@@ -4,7 +4,8 @@ const {
   getPlants,
   getPipelines,
   getDemandCenters,
-  getStorage
+  getStorage,
+  getRegulatoryZones
 } = require('../controllers/assetController');
 
 /**
@@ -23,5 +24,8 @@ router.get('/demand-centers', getDemandCenters);
 
 // GET /api/assets/storage - Get all hydrogen storage facilities
 router.get('/storage', getStorage);
+
+// GET /api/assets/regulatory-zones - Get all regulatory zones
+router.get('/regulatory-zones', getRegulatoryZones);
 
 module.exports = router;

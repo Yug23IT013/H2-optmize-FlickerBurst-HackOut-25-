@@ -27,14 +27,16 @@ const MainDashboard = () => {
     plants: null,
     pipelines: null,
     demandCenters: null,
-    storage: null
+    storage: null,
+    regulatoryZones: null
   });
   
   const [visibleLayers, setVisibleLayers] = useState({
     plants: true,
     pipelines: true,
     demandCenters: true,
-    storage: true
+    storage: true,
+    regulatoryZones: false // Initially hidden as they may clutter the map
   });
   
   const [suitabilityMode, setSuitabilityMode] = useState(false);
@@ -101,7 +103,8 @@ const MainDashboard = () => {
     plants: assets.plants?.features?.length || 0,
     pipelines: assets.pipelines?.features?.length || 0,
     demandCenters: assets.demandCenters?.features?.length || 0,
-    storage: assets.storage?.features?.length || 0
+    storage: assets.storage?.features?.length || 0,
+    regulatoryZones: assets.regulatoryZones?.features?.length || 0
   };
 
   /**

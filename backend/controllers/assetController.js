@@ -2,6 +2,7 @@ const Plant = require('../models/Plant');
 const Pipeline = require('../models/Pipeline');
 const DemandCenter = require('../models/DemandCenter');
 const Storage = require('../models/Storage');
+const RegulatoryZone = require('../models/RegulatoryZone');
 
 /**
  * Asset Controllers - Handle CRUD operations for infrastructure assets
@@ -145,9 +146,48 @@ const getStorage = async (req, res) => {
   }
 };
 
+/**
+ * Get all regulatory zones as GeoJSON
+ */
+const getRegulatoryZones = async (req, res) => {
+  try {
+    const zones = await RegulatoryZone.find({ status: 'active' });
+    
+    // Convert to GeoJSON FeatureCollection format
+    const geojson = {
+      type: 'FeatureCollection',
+      features: zones.map(zone => ({
+        type: 'Feature',
+        properties: {
+          id: zone._id,
+          name: zone.name,
+          type: zone.type,
+          jurisdiction: zone.jurisdiction,
+          policies: zone.policies,
+          restrictions: zone.restrictions,
+          approvalTimeline: zone.approvalTimeline,
+          regulatoryScore: zone.calculateRegulatoryScore(),
+          createdAt: zone.createdAt,
+          updatedAt: zone.updatedAt
+        },
+        geometry: zone.boundary
+      }))
+    };
+    
+    res.json(geojson);
+  } catch (error) {
+    console.error('Error fetching regulatory zones:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch regulatory zones',
+      message: error.message 
+    });
+  }
+};
+
 module.exports = {
   getPlants,
   getPipelines,
   getDemandCenters,
-  getStorage
+  getStorage,
+  getRegulatoryZones
 };

@@ -183,16 +183,30 @@ export const assetsAPI = {
   },
 
   /**
+   * Get all regulatory zones
+   * @returns {Promise} GeoJSON FeatureCollection of regulatory zones
+   */
+  getRegulatoryZones: async () => {
+    try {
+      const response = await api.get('/api/assets/regulatory-zones');
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to fetch regulatory zones: ${error.message}`);
+    }
+  },
+
+  /**
    * Get all assets at once
    * @returns {Promise} Object with all asset types
    */
   getAllAssets: async () => {
     try {
-      const [plants, pipelines, demandCenters, storage] = await Promise.all([
+      const [plants, pipelines, demandCenters, storage, regulatoryZones] = await Promise.all([
         assetsAPI.getPlants(),
         assetsAPI.getPipelines(),
         assetsAPI.getDemandCenters(),
         assetsAPI.getStorage(),
+        assetsAPI.getRegulatoryZones(),
       ]);
 
       return {
@@ -200,6 +214,7 @@ export const assetsAPI = {
         pipelines,
         demandCenters,
         storage,
+        regulatoryZones,
       };
     } catch (error) {
       throw new Error(`Failed to fetch assets: ${error.message}`);
@@ -245,6 +260,61 @@ export const suitabilityAPI = {
       return response.data;
     } catch (error) {
       throw new Error(`Failed to analyze area: ${error.message}`);
+    }
+  },
+};
+
+/**
+ * Regulatory API calls
+ */
+export const regulatoryAPI = {
+  /**
+   * Get all regulatory zones
+   * @param {string} type - Zone type filter (optional)
+   * @param {string} jurisdiction - Jurisdiction filter (optional)
+   * @returns {Promise} GeoJSON FeatureCollection of regulatory zones
+   */
+  getZones: async (type = null, jurisdiction = null) => {
+    try {
+      const params = new URLSearchParams();
+      if (type) params.append('type', type);
+      if (jurisdiction) params.append('jurisdiction', jurisdiction);
+      
+      const response = await api.get(`/api/regulatory/zones?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to fetch regulatory zones: ${error.message}`);
+    }
+  },
+
+  /**
+   * Get regulatory zones containing a specific point
+   * @param {number} lat - Latitude
+   * @param {number} lng - Longitude
+   * @returns {Promise} Regulatory analysis for the location
+   */
+  getZonesContainingPoint: async (lat, lng) => {
+    try {
+      const response = await api.post('/api/regulatory/zones/containing-point', { 
+        lat, 
+        lng 
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to analyze regulatory environment: ${error.message}`);
+    }
+  },
+
+  /**
+   * Get regulatory zone statistics
+   * @returns {Promise} Zone statistics by type and jurisdiction
+   */
+  getStats: async () => {
+    try {
+      const response = await api.get('/api/regulatory/stats');
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to fetch regulatory stats: ${error.message}`);
     }
   },
 };

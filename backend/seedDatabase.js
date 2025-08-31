@@ -3,6 +3,7 @@ const Plant = require('./models/Plant');
 const Pipeline = require('./models/Pipeline');
 const DemandCenter = require('./models/DemandCenter');
 const Storage = require('./models/Storage');
+const RegulatoryZone = require('./models/RegulatoryZone');
 require('dotenv').config();
 
 /**
@@ -250,6 +251,241 @@ const mockData = {
         ]
       }
     }
+  ],
+
+  regulatoryZones: [
+    {
+      name: "Gujarat Green Hydrogen Policy Zone",
+      type: "hydrogen-priority-zone",
+      jurisdiction: "state",
+      boundary: {
+        type: "Polygon",
+        coordinates: [[
+          [68.5, 20.0],   // Southwest corner
+          [74.5, 20.0],   // Southeast corner
+          [74.5, 24.5],   // Northeast corner
+          [68.5, 24.5],   // Northwest corner
+          [68.5, 20.0]    // Close the polygon
+        ]]
+      },
+      policies: {
+        hydrogenIncentives: true,
+        subsidyPercentage: 25,
+        fastTrackApproval: true,
+        environmentalClearanceRequired: true,
+        landAcquisitionSupport: true,
+        infrastructureSupport: true
+      },
+      restrictions: {
+        maxCapacity: null,
+        environmentalLimitations: ['water-usage-limit'],
+        seasonalRestrictions: []
+      },
+      approvalTimeline: 120,
+      contactInfo: {
+        authority: "Gujarat Energy Development Agency",
+        email: "hydrogen@geda.gujarat.gov.in",
+        phone: "+91-79-2327-6000",
+        website: "https://geda.gujarat.gov.in"
+      },
+      effectiveDate: new Date('2023-01-01'),
+      status: "active"
+    },
+    {
+      name: "Kandla Port Authority Zone",
+      type: "port-authority",
+      jurisdiction: "port-authority",
+      boundary: {
+        type: "Polygon",
+        coordinates: [[
+          [70.0, 22.8],   // Southwest
+          [70.5, 22.8],   // Southeast
+          [70.5, 23.2],   // Northeast
+          [70.0, 23.2],   // Northwest
+          [70.0, 22.8]    // Close
+        ]]
+      },
+      policies: {
+        hydrogenIncentives: true,
+        subsidyPercentage: 15,
+        fastTrackApproval: true,
+        environmentalClearanceRequired: true,
+        landAcquisitionSupport: false,
+        infrastructureSupport: true
+      },
+      restrictions: {
+        maxCapacity: 500,
+        environmentalLimitations: ['emission-limit', 'noise-restriction'],
+        seasonalRestrictions: []
+      },
+      approvalTimeline: 90,
+      contactInfo: {
+        authority: "Kandla Port Trust",
+        email: "info@kandlaport.gov.in",
+        phone: "+91-2836-270200",
+        website: "https://kandlaport.gov.in"
+      },
+      effectiveDate: new Date('2022-06-01'),
+      status: "active"
+    },
+    {
+      name: "Delhi NCR Industrial Corridor",
+      type: "industrial-zone",
+      jurisdiction: "central",
+      boundary: {
+        type: "Polygon",
+        coordinates: [[
+          [76.5, 28.0],   // Southwest
+          [78.0, 28.0],   // Southeast
+          [78.0, 29.5],   // Northeast
+          [76.5, 29.5],   // Northwest
+          [76.5, 28.0]    // Close
+        ]]
+      },
+      policies: {
+        hydrogenIncentives: false,
+        subsidyPercentage: 10,
+        fastTrackApproval: false,
+        environmentalClearanceRequired: true,
+        landAcquisitionSupport: false,
+        infrastructureSupport: true
+      },
+      restrictions: {
+        maxCapacity: 200,
+        environmentalLimitations: ['emission-limit', 'water-usage-limit', 'noise-restriction'],
+        seasonalRestrictions: [
+          {
+            months: ['nov', 'dec', 'jan', 'feb'],
+            reason: 'Air quality restrictions during winter months'
+          }
+        ]
+      },
+      approvalTimeline: 240,
+      contactInfo: {
+        authority: "Delhi Pollution Control Committee",
+        email: "member.secy@dpcc.delhigovt.nic.in",
+        phone: "+91-11-2370-0846",
+        website: "https://dpcc.delhigovt.nic.in"
+      },
+      effectiveDate: new Date('2021-04-01'),
+      status: "active"
+    },
+    {
+      name: "Maharashtra Renewable Energy Zone",
+      type: "renewable-energy-zone",
+      jurisdiction: "state",
+      boundary: {
+        type: "Polygon",
+        coordinates: [[
+          [72.0, 18.0],   // Southwest
+          [75.0, 18.0],   // Southeast
+          [75.0, 20.5],   // Northeast
+          [72.0, 20.5],   // Northwest
+          [72.0, 18.0]    // Close
+        ]]
+      },
+      policies: {
+        hydrogenIncentives: true,
+        subsidyPercentage: 20,
+        fastTrackApproval: false,
+        environmentalClearanceRequired: true,
+        landAcquisitionSupport: true,
+        infrastructureSupport: false
+      },
+      restrictions: {
+        maxCapacity: null,
+        environmentalLimitations: ['land-use-restriction'],
+        seasonalRestrictions: []
+      },
+      approvalTimeline: 180,
+      contactInfo: {
+        authority: "Maharashtra Energy Development Agency",
+        email: "info@mahaurja.com",
+        phone: "+91-20-2553-2733",
+        website: "https://mahaurja.com"
+      },
+      effectiveDate: new Date('2022-03-01'),
+      status: "active"
+    },
+    {
+      name: "Rajasthan Solar Park Zone",
+      type: "renewable-energy-zone",
+      jurisdiction: "state",
+      boundary: {
+        type: "Polygon",
+        coordinates: [[
+          [69.0, 24.0],   // Southwest
+          [78.0, 24.0],   // Southeast
+          [78.0, 30.0],   // Northeast
+          [69.0, 30.0],   // Northwest
+          [69.0, 24.0]    // Close
+        ]]
+      },
+      policies: {
+        hydrogenIncentives: true,
+        subsidyPercentage: 30,
+        fastTrackApproval: true,
+        environmentalClearanceRequired: false,
+        landAcquisitionSupport: true,
+        infrastructureSupport: true
+      },
+      restrictions: {
+        maxCapacity: null,
+        environmentalLimitations: ['water-usage-limit'],
+        seasonalRestrictions: []
+      },
+      approvalTimeline: 90,
+      contactInfo: {
+        authority: "Rajasthan Renewable Energy Corporation",
+        email: "info@rrecl.com",
+        phone: "+91-141-2385500",
+        website: "https://energy.rajasthan.gov.in"
+      },
+      effectiveDate: new Date('2023-04-01'),
+      status: "active"
+    },
+    {
+      name: "Western Ghats Environmental Sensitive Zone",
+      type: "environmental-sensitive",
+      jurisdiction: "central",
+      boundary: {
+        type: "Polygon",
+        coordinates: [[
+          [73.0, 15.0],   // Southwest
+          [77.0, 15.0],   // Southeast
+          [77.0, 21.0],   // Northeast
+          [73.0, 21.0],   // Northwest
+          [73.0, 15.0]    // Close
+        ]]
+      },
+      policies: {
+        hydrogenIncentives: false,
+        subsidyPercentage: 0,
+        fastTrackApproval: false,
+        environmentalClearanceRequired: true,
+        landAcquisitionSupport: false,
+        infrastructureSupport: false
+      },
+      restrictions: {
+        maxCapacity: 50,
+        environmentalLimitations: ['emission-limit', 'noise-restriction', 'land-use-restriction', 'water-usage-limit'],
+        seasonalRestrictions: [
+          {
+            months: ['jun', 'jul', 'aug', 'sep'],
+            reason: 'Monsoon season environmental protection'
+          }
+        ]
+      },
+      approvalTimeline: 365,
+      contactInfo: {
+        authority: "Ministry of Environment, Forest and Climate Change",
+        email: "secy-moef@nic.in",
+        phone: "+91-11-2436-0668",
+        website: "https://moef.gov.in"
+      },
+      effectiveDate: new Date('2020-01-01'),
+      status: "active"
+    }
   ]
 };
 
@@ -262,25 +498,14 @@ async function seedDatabase() {
 
     // Clear existing data
     console.log('🗑️  Clearing existing data...');
-    await Plant.deleteMany({});
-    await Pipeline.deleteMany({});
-    await DemandCenter.deleteMany({});
-    await Storage.deleteMany({});
+    await RegulatoryZone.deleteMany({});
 
     // Insert mock data
     console.log('🌱 Seeding database with mock data...');
+
     
-    const plants = await Plant.insertMany(mockData.plants);
-    console.log(`   📍 Created ${plants.length} plants`);
-    
-    const demandCenters = await DemandCenter.insertMany(mockData.demandCenters);
-    console.log(`   🏭 Created ${demandCenters.length} demand centers`);
-    
-    const storage = await Storage.insertMany(mockData.storage);
-    console.log(`   🏪 Created ${storage.length} storage facilities`);
-    
-    const pipelines = await Pipeline.insertMany(mockData.pipelines);
-    console.log(`   🔗 Created ${pipelines.length} pipelines`);
+    const regulatoryZones = await RegulatoryZone.insertMany(mockData.regulatoryZones);
+    console.log(`   ⚖️  Created ${regulatoryZones.length} regulatory zones`);
 
     console.log('');
     console.log('✅ Database seeding completed successfully!');
